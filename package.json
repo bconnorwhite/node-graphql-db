@@ -1,0 +1,23 @@
+{
+  "name": "node-graphql-db",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "author": "Connor White",
+  "license": "ISC",
+  "scripts": {
+    "build": "tsc index.ts --outDir build",
+    "rebuild": "rm -r build && npm run build",
+    "start": "npm run build && node build/index.js",
+    "db-delete": "> db.json"
+  },
+  "dependencies": {
+    "graphql": "^14.5.6",
+    "graphql-extra-scalars": "^2.1.0",
+    "graphql-type-json": "^0.3.0",
+    "graphql-yoga": "^1.18.3",
+    "json-cycle": "^1.3.0",
+    "luxon": "^1.18.0",
+    "weissman-json": "^1.0.11"
+  }
+}
