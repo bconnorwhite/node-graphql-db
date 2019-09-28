@@ -11,31 +11,36 @@ let graph = new Graph({
       unique: true
     },
     city: {
-      type: "City!"
+      type: "City!",
+      inverse: "users"
     }
   },
   City: {
     name: {
       type: "String!"
+    },
+    users: {
+      type: "[User!]!",
+      inverse: "city"
     }
   }
 }, {
-  database: {
-    compress: false,
-    pretty: true,
-    watch: true
+  clientOptions: {
+    databaseOptions: {
+      watch: true,
+      fileOptions: {
+        compress: false,
+        pretty: true,
+      }
+    }
   }
 });
 
-function save() {
-  console.log();
-  graph.save();
-  process.exit();
-}
+const server = new GraphQLServer({
+  typeDefs: graph.typeDefs,
+  resolvers: graph.resolvers
+});
 
-process.on('SIGINT', save);
-
-const server = new GraphQLServer({ typeDefs: graph.typeDefs, resolvers: graph.resolvers });
 server.start({
   port: 4321
 }, ({ port }) => {

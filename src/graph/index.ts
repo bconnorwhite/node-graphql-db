@@ -1,32 +1,24 @@
-import { Action, TypeList, InputList, EnumList, Resolvers, DatabaseInterface, DatabaseOptions } from '../interfaces';
-import Datamodel from '../datamodel';
-import Database from '../database';
-import Client from '../client';
-import getResolvers from '../resolvers';
-import getTypeDefs from '../typeDefs';
+import { ITypeDefinitions, IResolvers } from 'graphql-tools';
 
-interface Options {
-  database?: DatabaseOptions
+import getResolvers from './resolvers';
+import getTypeDefs from './typeDefs';
+
+import Client, { ClientOptions } from './client';
+import { ModelList } from './client/database/datamodel';
+
+export interface GraphOptions {
+  clientOptions?: ClientOptions
 }
 
 export default class Graph {
-  typeDefs: string;
-  resolvers: Resolvers;
-  datamodel;
-  database: DatabaseInterface;
-  client;
-  options: Options;
-  constructor(datamodel: TypeList, options: Options={}) {
+  typeDefs: ITypeDefinitions;
+  resolvers: IResolvers | IResolvers[];
+  client: Client;
+  private options: GraphOptions;
+  constructor(datamodel: ModelList, options: GraphOptions={}) {
     this.options = options;
-    this.datamodel = new Datamodel(datamodel);
-    this.database = new Database(this.datamodel.types, this.datamodel.inputs, options.database);
-    this.client = new Client(datamodel, this.database);
-    //Build typeDefs
-    this.typeDefs = getTypeDefs(this.datamodel.types, this.datamodel.inputs, this.datamodel.enums);
-    //Build resolvers
-    this.resolvers = getResolvers(this.datamodel.types, this.client);
-  }
-  save() {
-    this.database.save();
+    this.client = new Client(datamodel, options.clientOptions);
+    this.typeDefs = getTypeDefs(this.client);
+    this.resolvers = getResolvers(this.client);
   }
 }
