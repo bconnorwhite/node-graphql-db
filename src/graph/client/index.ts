@@ -15,8 +15,6 @@ import {
   typeNameToRestoreManyFieldName
 } from 'utils';
 
-import create from './create';
-
 import Database, { Node, DatabaseOptions } from './database';
 import { ModelList } from './database/datamodel';
 import { WhereInputArgs } from './database/where';
@@ -58,12 +56,12 @@ export default class Client {
         return this.database.where(typeName, args).nodes;
       };
       this[typeNameToHistoryFieldName(typeName)] = (where: object) => {
-        //return this.database.whereUnique(typeName, where);
+        return this.database.whereUniqueHist(typeName, where);
       };
       this[typeNameToPluralHistoryFieldName(typeName)] = (args: WhereInputArgs) => {
-        //return this.database.where(typeName, args).nodes;
+        return this.database.whereHist(typeName, args);
       };
-      this[typeNameToConnectionFieldName(typeName)] = (args: WhereInputArgs) => {
+      this[typeNameToConnectionFieldName(typeName)] = (args: WhereInputArgs) => { //are connections really needed?
         let result = this.database.where(typeName, args);
         return {
           pageInfo: {

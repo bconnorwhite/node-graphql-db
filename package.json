@@ -7,11 +7,13 @@
   "license": "ISC",
   "scripts": {
     "build": "tsc --project ./tsconfig.json",
+    "watch": "tsc --watch --project ./tsconfig.json",
     "rebuild": "rm -r build && npm run build",
     "start": "node build/index.js",
     "db-delete": "> db.json"
   },
   "dependencies": {
+    "@bconnorwhite/for-any": "^1.0.3",
     "fast-json-patch": "^3.0.0-1",
     "graphql": "^14.5.6",
     "graphql-extra-scalars": "^2.1.0",

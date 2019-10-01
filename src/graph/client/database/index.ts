@@ -1,11 +1,13 @@
 import uuid from 'uuid/v4';
+import { applyPatch } from 'fast-json-patch';
+import { decycle, retrocycle } from 'json-cycle';
 
 import { typeNameToWhereInput } from 'utils';
 
 import where, { WhereInputArgs } from './where';
 import whereUnique from './whereUnique';
 import create from './create';
-import commit from './commit';
+import commit, { Commit } from './commit';
 
 import Datamodel, { ModelList } from './datamodel';
 import Datafile, { DatafileOptions } from './datafile';
@@ -83,13 +85,13 @@ export default class Database {
         patches: {}
       };
     });
-    this.load();
+    this.load(this.data);
   }
   private watch() {
     this.datafile.watch(()=>this.load());
   }
-  load() {
-    let load = this.datafile.load(this.data);
+  load(data?: DatabaseData) {
+    let load = this.datafile.load(data);
     this.data = load.data;
     return load.elapsed;
   }
@@ -126,19 +128,50 @@ export default class Database {
   private getTable(typeName: string, index: string="uuid") {
     return this.data[typeName].nodes[index];
   }
+  private getHist(typeName: string, node: Node) {
+    let patches = this.data[typeName].patches[node.uuid];
+    let hist = [node];
+    patches.forEach((patch) => {
+      hist.push(retrocycle(applyPatch(decycle(Object.assign({}, node)), patch, undefined, false).newDocument));
+    });
+    return hist;
+  }
+  private commit(patches: Commit) {
+    this.data = commit(this.data, patches);
+  }
+  getTypeModel(typeName: string) {
+    return this.datamodel.model[typeName];
+  }
+  getFieldModel(typeName: string, fieldName: string) {
+    return this.datamodel.model[typeName][fieldName];
+  }
   whereUnique(typeName: string, where: object) {
     let table = this.getTable(typeName);
     return whereUnique(table, where);
+  }
+  whereUniqueHist(typeName: string, where: object) {
+    let node = this.whereUnique(typeName, where);
+    if(node) {
+      return this.getHist(typeName, node);
+    }
   }
   where(typeName: string, args: WhereInputArgs={}) {
     let table = this.getTable(typeName);
     let inputType = this.datamodel.inputs[typeNameToWhereInput(typeName)];
     return where(table, inputType, args);
   }
+  whereHist(typeName: string, args: WhereInputArgs={}) {
+    let result = this.where(typeName, args);
+    return result.nodes.map((node) => ({
+      nodes: this.getHist(typeName, node),
+      hasNextPage: result.hasNextPage,
+      hasPreviousPage: result.hasPreviousPage
+    }));
+  }
   create(typeName: string, data: object) {
     let result = create(this, typeName, data);
     if(result) {
-      this.data = commit(this.data, result.commit);
+      this.commit(result.commit);
       return result.node;
     } else {
       return null;

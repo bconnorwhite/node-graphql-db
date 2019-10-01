@@ -16,24 +16,23 @@ export interface CommitOperation {
   operation: Operation
 }
 
-function reverse(patch: Patch, removed: FieldValue[]) {
-  return patch.map((operation, index) => {
-    if(operation.op == "add") {
-      return { op: "remove", path: operation.path };
-    } else if(operation.op == "remove") {
-      return { op: "add", path: operation.path, value: removed[index] };
-    } else if(operation.op == "replace") {
-      return { op: "replace", path: operation.path, value: removed[index] };
-    }
-  });
-}
-
 function commitToPatch(commit: Commit) {
   return commit.map((commit) => ({
     op: commit.operation.op,
-    path: `${commit.typeName}/nodes/${commit.node.uuid}${commit.operation.path}`,
-    value: commit.operation.value
+    path: `/${commit.typeName}/nodes/uuid/${commit.node.uuid}${commit.operation.path}`,
+    value: commit.operation["value"]
   }));
+}
+
+
+function reverse(operation: Operation, removed: FieldValue) {
+  if(operation.op == "add") {
+    return { op: "remove", path: operation.path };
+  } else if(operation.op == "remove") {
+    return { op: "add", path: operation.path, value: removed };
+  } else if(operation.op == "replace") {
+    return { op: "replace", path: operation.path, value: removed };
+  }
 }
 
 export default (data: DatabaseData, commit: Commit) => {
@@ -43,7 +42,7 @@ export default (data: DatabaseData, commit: Commit) => {
   commit.forEach((item, index) => {
     patches[item.typeName] = patches[item.typeName] || {};
     patches[item.typeName][item.node.uuid] = patches[item.typeName][item.node.uuid] || [];
-    patches[item.typeName][item.node.uuid].push(patch[index]);
+    patches[item.typeName][item.node.uuid].push(reverse(commit[index].operation, result[index].removed));
   });
   let retval = result.newDocument;
   Object.keys(patches).forEach((typeName) => {

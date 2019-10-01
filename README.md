@@ -1,3 +1,11 @@
+Why not (Mongo, Prisma, etc.)?
+- React page builder allows forces to register queries. This allows you to optimize indexes.
+- Perfect knowledge of mutations for caching - usually have everything you need in memory.
+- Data is already built in the correct format, not fetching and massaging into the structure GraphQL needs.
+  Then when React gets this data, it is again still in JSON, no massaging needed.
+
+- ** only allow [Type] not [Type!] or [Type!]! ? -> transform all [] in datamodel to [Type!]!
+
 TODO:
 
 - object connections
@@ -108,6 +116,12 @@ Performance
 - db.json pointer file to other files, some on disc, some in mem
 https://medium.com/@denisanikin/what-an-in-memory-database-is-and-how-it-persists-data-efficiently-f43868cff4c1
 - https://www.npmjs.com/package/event-stream not readFile()
+
+- use query registration (react library) to optimize indexes
+- keep track of what has been loaded into memory to keep track of cache hit/miss
+  - where = load full table (where, orderBy, paging in memory)
+  - whereUnique = load one
+- index table uuid + start/end buffer
 
 -----
 Admin

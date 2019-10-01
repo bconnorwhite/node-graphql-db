@@ -10,18 +10,42 @@ let graph = new Graph({
       type: "Email!",
       unique: true
     },
-    city: {
-      type: "City!",
-      inverse: "users"
+    biography: {
+      type: "Book",
+      inverse: "about"
+    },
+    favorite: {
+      type: "Book",
+      inverse: "favoritedBy"
+    },
+    booksWritten: {
+      type: "[Book!]!",
+      inverse: "author"
+    },
+    booksRead: {
+      type: "[Book!]!",
+      inverse: "readers"
     }
   },
-  City: {
+  Book: {
     name: {
       type: "String!"
     },
-    users: {
+    readers: {
       type: "[User!]!",
-      inverse: "city"
+      inverse: "booksRead"
+    },
+    author: {
+      type: "User!",
+      inverse: "booksWritten"
+    },
+    about: {
+      type: "User",
+      inverse: "biography"
+    },
+    favoritedBy: {
+      type: "[User!]!",
+      inverse: "favorite"
     }
   }
 }, {

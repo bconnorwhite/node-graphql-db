@@ -2,6 +2,7 @@ import {
   typeNameToFieldName,
   typeNameToPluralFieldName,
   typeNameToHistoryFieldName,
+  typeNameToPluralHistoryFieldName,
   typeNameToConnectionFieldName,
   typeNameToWhereUniqueInput,
   typeNameToWhereInput,
@@ -44,7 +45,7 @@ function QueryHistory(typeName: string) {
   return {
     returnType: returnTypeList(typeName),
     args: {
-      where: returnTypeRequire(returnTypeList(typeNameToWhereUniqueInput(typeName))),
+      where: returnTypeRequire(typeNameToWhereUniqueInput(typeName)),
     },
     action: Action.getHistory
   };
@@ -88,7 +89,7 @@ export default (datamodel: ModelList) => {
     queryType[typeNameToFieldName(typeName)] = Query(typeName);
     queryType[typeNameToPluralFieldName(typeName)] = QueryPlural(typeName);
     queryType[typeNameToHistoryFieldName(typeName)] = QueryHistory(typeName);
-    queryType[typeNameToHistoryFieldName(typeName)] = QueryPluralHistory(typeName);
+    queryType[typeNameToPluralHistoryFieldName(typeName)] = QueryPluralHistory(typeName);
     queryType[typeNameToConnectionFieldName(typeName)] = QueryConnection(typeName);
   });
   return queryType;

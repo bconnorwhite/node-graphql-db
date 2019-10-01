@@ -4,22 +4,20 @@ import {
   typeNameToCreateWithoutFieldInput
 } from 'utils';
 
-import addCreateWithoutFieldInput from './createWithoutFieldInput';
+import addCreateWithoutFieldInput from './createInput';
 
 import { ModelList } from '../';
 import { InputList } from './';
 
-export default (datamodel: ModelList, typeName: string, withoutFieldName: string, inputs: InputList) => {
-  if(inputs[typeNameToCreateOneWithoutFieldInput(typeName, withoutFieldName)] == undefined) {
-    inputs[typeNameToCreateOneWithoutFieldInput(typeName, withoutFieldName)] = {
-      create: {
-        returnType: typeNameToCreateWithoutFieldInput(typeName, withoutFieldName)
-      },
-      connect: {
-        returnType: typeNameToWhereUniqueInput(typeName)
-      }
-    };
-  }
-  inputs = addCreateWithoutFieldInput(datamodel, typeName, withoutFieldName, inputs);
+export default (datamodel: ModelList, typeName: string, inputs: InputList, withoutFieldName: string) => {
+  inputs[typeNameToCreateOneWithoutFieldInput(typeName, withoutFieldName)] = {
+    create: {
+      returnType: typeNameToCreateWithoutFieldInput(typeName, withoutFieldName)
+    },
+    connect: {
+      returnType: typeNameToWhereUniqueInput(typeName)
+    }
+  };
+  inputs = addCreateWithoutFieldInput(datamodel, typeName, inputs, withoutFieldName);
   return inputs;
 };

@@ -1,98 +1,76 @@
 import {
+  mapAny,
+  forEachAny
+} from '@bconnorwhite/for-any';
+
+import {
   returnTypeToTypeName,
   returnTypeIsList,
-  returnTypeIsRequired,
-  returnTypeInnerIsRequried,
+  returnTypeIsRequired
 } from 'utils';
 
-import Database, { Node, TypeFieldValue } from './';
-import { Commit } from './commit';
+import Database from './';
+import { Model } from './datamodel';
+import connect from './connect';
 
-export default function create(database: Database, typeName: string, data: object, commit: Commit=[]) {
+function cleanData(data: object, model: Model) {
+  Object.keys(model).forEach((fieldName) => {
+    if(!model[fieldName].managed && data[fieldName] == undefined) {
+      if(model[fieldName].default !== undefined) {
+        data[fieldName] = model[fieldName].default;
+      } else if(returnTypeIsList(model[fieldName].type)) {
+        data[fieldName] = [];
+      } else if(returnTypeIsRequired(model[fieldName].type)) {
+        throw new Error(`${fieldName} is a required field`);
+      }
+    }
+  });
+  return data;
+}
+
+export default function create(database: Database, typeName: string, data: object) { //don't pass this in, just return up
+  data = cleanData(data, database.getTypeModel(typeName));
   let node = database.generateNode(typeName);
+  let commit = [];
   for(let fieldName of Object.keys(data)) {
+    let fieldModel = database.getFieldModel(typeName, fieldName);
     let field = data[fieldName];
     if(typeof field !== "object") {
+      if(fieldModel.unique && database.whereUnique(typeName, { [fieldName]: field })) {
+        throw new Error(`${typeName} with unique field ${fieldName}=${field} already exists.`);
+      }
       node[fieldName] = field;
     } else {
-      let fieldModel = database.datamodel[typeName][fieldName];
       let fieldTypeName = returnTypeToTypeName(fieldModel.type);
-      let inverse = fieldModel.inverse;
       if(field.create) {
-        let fieldData = field.create;
-        if(inverse) {
-          let inverseReturnType = database.datamodel[fieldTypeName][inverse].type;
-          if(!returnTypeIsList(inverseReturnType)) {
-            fieldData[inverse] = { inverse: node };
-          } else {
-            fieldData[inverse] = { inverse: [node] };
-          }
+        if(fieldModel.inverse) {
+          let inverseReturnType = database.getFieldModel(fieldTypeName, fieldModel.inverse).type;
+          field.create = mapAny(field.create, (item) => ({
+            ...item,
+            [fieldModel.inverse]: {
+              inverse: returnTypeIsList(inverseReturnType) ? [node] : node
+            }
+          }));
         }
-        let result = create(database, fieldTypeName, fieldData, commit);
-        if(result) {
-          node[fieldName] = result.node;
-          commit = commit.concat(result.commit);
+        let results = mapAny(field.create, (data) => create(database, fieldTypeName, data));
+        node[fieldName] = mapAny(results, (result) => result.node);
+        forEachAny(results, (result) => commit = commit.concat(result.commit));
+      } else if(field.connect) {
+        let results = connect(database, fieldTypeName, field.connect, node, fieldModel.inverse);
+        if(results) {
+          node[fieldName] = mapAny(results, (result) => result.node);
+          forEachAny(results, (result) => commit = commit.concat(result.commit));
         } else if(returnTypeIsRequired(fieldModel.type)) {
           return;
         }
-      } else if(field.connect) {
-        throw new Error("create -> connect is not yet implemented.");
-        // let fieldValue: TypeFieldValue;
-        // if(!returnTypeIsList(fieldModel.type)) {
-        //   let fieldValueHist = database.whereUnique(fieldTypeName, field.connect);
-        //   fieldValue = histToNode(fieldValueHist);
-        //   if(fieldValue == null && returnTypeInnerIsRequried(fieldModel.type)) {
-        //     return;
-        //   }
-        // } else {
-        //   let fieldValueHistMatches = data[fieldName].connect.map((where: object) => database.whereUnique(fieldTypeName, where));
-        //   fieldValue = fieldValueHistMatches.map((fieldNodeHist: Node[]) => histToNode(fieldNodeHist));
-        //   if(fieldValue == null && returnTypeIsRequired(fieldModel.type)) {
-        //     return;
-        //   }
-        // }
-        // node[fieldName] = fieldValue; // connect node to fieldValue
-        // if(fieldValue && inverse && fieldValue[inverse]) {
-        //   let inverseReturnType = datamodel[fieldTypeName][inverse].type;
-        //   if(!returnTypeIsList(inverseReturnType)) {
-        //     if(returnTypeIsRequired(inverseReturnType)) {
-        //       return;
-        //     } else { // disconnect old fieldValue connection
-        //       let disconnect = Object.assign({}, fieldValue[inverse]);
-        //       disconnect[fieldName] = null;
-        //       if(isNode(disconnect)) {
-        //         let nodeDisconnect = Object.assign({}, database.data.Node[disconnect.uuid]);
-        //         nodeDisconnect[fieldName] = null;
-        //         if(isNode(nodeDisconnect)) {
-        //           commit.push({
-        //             typeName: typeName,
-        //             node: nodeDisconnect
-        //           });
-        //           commit.push({
-        //             typeName: typeName,
-        //             node: disconnect
-        //           });
-        //         } else {
-        //           return;
-        //         }
-        //       } else {
-        //         return;
-        //       }
-        //       fieldValue[inverse] = node; // connect fieldValue to node
-        //     }
-        //   } else {
-        //     if(!Array.isArray(fieldValue[inverse])) {
-        //       fieldValue[inverse] = [];
-        //     }
-        //     fieldValue[inverse].push(node);
-        //   }
-        // }
       } else if(field.inverse) {
         node[fieldName] = field.inverse;
+      } else if(returnTypeIsList(fieldModel.type) && Array.isArray(field)) {
+        node[fieldName] = field;
       }
     }
   }
-  commit.push({
+  commit.unshift({
     node: node,
     typeName: typeName,
     operation: {
