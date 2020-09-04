@@ -1,0 +1,28 @@
+{
+  "name": "essence-server",
+  "version": "0.1.0",
+  "description": "GraphQL server",
+  "main": "./build/index.js",
+  "bin": "./cli.js",
+  "scripts": {
+    "build": "tsc --project ./tsconfig.json",
+    "rebuild": "rm -r build && npm run build"
+  },
+  "keywords": [
+    "GraphQL",
+    "API",
+    "server"
+  ],
+  "author": "Connor White",
+  "license": "ISC",
+  "dependencies": {
+    "essence-db": "file:../essence-db",
+    "essence-tools": "file:../essence-tools",
+    "graphql": "^14.5.8",
+    "graphql-extra-scalars": "^2.1.0",
+    "graphql-type-json": "^0.3.0",
+    "graphql-upload": "^8.0.7",
+    "graphql-yoga": "^1.18.3",
+    "luxon": "^1.19.3"
+  }
+}

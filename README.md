@@ -1,6 +1,7 @@
 Why not (Mongo, Prisma, etc.)?
 - React page builder allows forces to register queries. This allows you to optimize indexes.
 - Perfect knowledge of mutations for caching - usually have everything you need in memory.
+- Don't have to duplicate compute/memory usage across DB and backend server.
 - Data is already built in the correct format, not fetching and massaging into the structure GraphQL needs.
   Then when React gets this data, it is again still in JSON, no massaging needed.
 
@@ -26,6 +27,7 @@ ideally let the user create their own combination though
 - need to figure out how handled deleted nodes: null, deleted: true, etc? query userDeleted?
 - generalized rollback instead of restore?
 - cascades
+- migration
 
 -----
 Extension Features (beyond Prisma)
@@ -72,7 +74,7 @@ Extension Features (beyond Prisma)
 -----
 Error Checking
 -----
-- throw error if datamodel has type Node (or better, make type Node `_Node`)
+- yes
 
 -----
 Server Admin

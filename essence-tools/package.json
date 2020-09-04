@@ -1,0 +1,20 @@
+{
+  "name": "essence-tools",
+  "version": "0.1.0",
+  "description": "Tools for essence-db, essence-server",
+  "main": "./build/index.js",
+  "author": "Connor White",
+  "license": "ISC",
+  "scripts": {
+    "build": "tsc --project ./tsconfig.json",
+    "rebuild": "rm -r build && npm run build"
+  },
+  "keywords": [
+    "Essence",
+    "tools",
+    "graphql"
+  ],
+  "dependencies": {
+    "pluralize": "^8.0.0"
+  }
+}

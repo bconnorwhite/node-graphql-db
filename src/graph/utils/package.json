@@ -1,8 +1,0 @@
-{
-  "name": "utils",
-  "version": "1.0.0",
-  "description": "",
-  "main": "../../build/src/graph/utils/index.js",
-  "author": "Connor White",
-  "license": "ISC"
-}

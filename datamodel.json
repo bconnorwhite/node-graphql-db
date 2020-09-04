@@ -1,0 +1,48 @@
+{
+  "User": {
+    "name": {
+      "type": "String!"
+    },
+    "email": {
+      "type": "Email!",
+      "unique": true
+    },
+    "biography": {
+      "type": "Book",
+      "inverse": "about"
+    },
+    "favorite": {
+      "type": "Book",
+      "inverse": "favoritedBy"
+    },
+    "booksWritten": {
+      "type": "[Book!]!",
+      "inverse": "author"
+    },
+    "booksRead": {
+      "type": "[Book!]!",
+      "inverse": "readers"
+    }
+  },
+  "Book": {
+    "name": {
+      "type": "String!"
+    },
+    "readers": {
+      "type": "[User!]!",
+      "inverse": "booksRead"
+    },
+    "author": {
+      "type": "User!",
+      "inverse": "booksWritten"
+    },
+    "about": {
+      "type": "User",
+      "inverse": "biography"
+    },
+    "favoritedBy": {
+      "type": "[User!]!",
+      "inverse": "favorite"
+    }
+  }
+}
